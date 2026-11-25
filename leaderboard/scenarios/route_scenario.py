@@ -43,6 +43,7 @@ from leaderboard.utils.route_parser import RouteParser, DIST_THRESHOLD
 from leaderboard.utils.route_manipulation import interpolate_trajectory
 
 import leaderboard.utils.parked_vehicles as parked_vehicles
+from leaderboard.utils import protocol
 from leaderboard.tools.actor_state import destroy_actors, has_actor_ticked
 from leaderboard.tools.actor_factory import request_new_actor
 
@@ -418,13 +419,13 @@ class RouteScenario(BasicScenario):
         criteria.add_child(CollisionTest(self.ego_vehicles[0], name="CollisionTest"))
         criteria.add_child(RunningRedLightTest(self.ego_vehicles[0]))
         criteria.add_child(RunningStopTest(self.ego_vehicles[0]))
-        criteria.add_child(MinimumSpeedRouteTest(self.ego_vehicles[0], self.route, checkpoints=4, name="MinSpeedTest"))
+        criteria.add_child(MinimumSpeedRouteTest(self.ego_vehicles[0], self.route, checkpoints=protocol.get('min_speed_checkpoints'), name="MinSpeedTest"))
 
         # These stop the route early to save computational time
         criteria.add_child(InRouteTest(
             self.ego_vehicles[0], route=self.route, offroad_max=30, terminate_on_failure=True))
         criteria.add_child(ActorBlockedTest(
-            self.ego_vehicles[0], min_speed=0.1, max_time=180.0, terminate_on_failure=True, name="AgentBlockedTest")
+            self.ego_vehicles[0], min_speed=0.1, max_time=protocol.get('blocked_time'), terminate_on_failure=True, name="AgentBlockedTest")
         )
 
         return criteria

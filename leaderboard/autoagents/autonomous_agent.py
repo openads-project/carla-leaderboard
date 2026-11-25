@@ -13,6 +13,7 @@ import carla
 from leaderboard.scenariomanager.timer import GameTime
 
 from leaderboard.utils.route_manipulation import downsample_route
+from leaderboard.utils import protocol
 from leaderboard.envs.sensor_interface import SensorInterface
 
 
@@ -125,6 +126,6 @@ class AutonomousAgent(object):
         """
         Set the plan (route) for the agent
         """
-        ds_ids = downsample_route(global_plan_world_coord, 200)
+        ds_ids = downsample_route(global_plan_world_coord, protocol.get('plan_downsample'))
         self._global_plan_world_coord = [(global_plan_world_coord[x][0], global_plan_world_coord[x][1]) for x in ds_ids]
         self._global_plan = [global_plan_gps[x] for x in ds_ids]

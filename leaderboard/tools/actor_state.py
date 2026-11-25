@@ -26,6 +26,11 @@ def has_actor_ticked(actor):
     advances, and reports the origin meanwhile. No road position is the origin,
     so that is what distinguishes the two.
     """
+    # OpenADS: a destroyed actor has no state to read either, and get_location() raises for it.
+    # The Traffic Manager destroys stuck vehicles. Before the CarlaDataProvider removal, its
+    # cached location was None for them, which every caller skipped.
+    if not actor.is_alive:
+        return False
     location = actor.get_location()
     return (location.x, location.y, location.z) != UNTICKED_LOCATION
 

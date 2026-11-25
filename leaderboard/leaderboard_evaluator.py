@@ -30,6 +30,7 @@ from leaderboard.scenarios.scenario_manager import ScenarioManager
 from leaderboard.scenarios.route_scenario import RouteScenario
 from leaderboard.envs.sensor_interface import SensorConfigurationInvalid
 from leaderboard.autoagents.agent_wrapper import AgentError, validate_sensor_configuration
+from leaderboard.utils import protocol
 from leaderboard.utils.statistics_manager import StatisticsManager, FAILURE_MESSAGES
 from leaderboard.utils.route_indexer import RouteIndexer
 
@@ -359,6 +360,12 @@ class LeaderboardEvaluator(object):
             self.manager.load_scenario(self.route_scenario, self.agent_instance, config.index, config.repetition_index)
             self.manager.run_scenario()
 
+        except protocol.TickLimitReached:
+            # OpenADS: tick limit of the protocol (b2d: 4000). As in Bench2Drive, the route ends as
+            # 'Failed - TickRuntime' and the evaluation goes on with the next route.
+            print("\n\033[93mStopping the route, tick limit of the protocol reached\033[0m")
+            entry_status, crash_message = "Started", "TickRuntime"
+
         except AgentError:
             # The agent has failed -> stop the route
             print("\n\033[91mStopping the route, the agent has crashed:")
@@ -479,7 +486,11 @@ def main():
     parser.add_argument("--debug-checkpoint", type=str, default='./live_results.txt',
                         help="Path to checkpoint used for saving live results")
 
+    parser.add_argument("--protocol", type=str, default='default', choices=sorted(protocol.PROTOCOLS),
+                        help="Evaluation protocol: default (upstream) or b2d (Bench2Drive's rules)")
+
     arguments = parser.parse_args()
+    protocol.set_protocol(arguments.protocol)
 
     statistics_manager = StatisticsManager(arguments.checkpoint, arguments.debug_checkpoint)
     leaderboard_evaluator = LeaderboardEvaluator(arguments, statistics_manager)

@@ -1824,6 +1824,15 @@ class ActorFlow(AtomicBehavior):
         """Controls the created actors and creaes / removes other when needed"""
         # Control the vehicles, removing them when needed
         for actor, sensor in zip(list(self._actor_list), list(self._collision_sensor_list)):
+            # OpenADS: drop an actor the Traffic Manager destroyed, with its sensor,
+            # so that the spawn distance below is not measured from it
+            if not actor.is_alive:
+                if sensor is not None:
+                    sensor.stop()
+                    sensor.destroy()
+                self._collision_sensor_list.remove(sensor)
+                self._actor_list.remove(actor)
+                continue
             if not has_actor_ticked(actor):
                 continue
             location = actor.get_location()
@@ -1852,6 +1861,9 @@ class ActorFlow(AtomicBehavior):
         """Stops the constant velocity behavior"""
         self._is_constant_velocity_active = False
         for actor in self._actor_list:
+            # OpenADS: the Traffic Manager may have destroyed it, through this same handle
+            if not actor.is_alive:
+                continue
             actor.disable_constant_velocity()
             self._tm.ignore_vehicles_percentage(actor, 0)
 
@@ -1874,6 +1886,9 @@ class ActorFlow(AtomicBehavior):
                 pass  # Actor was already destroyed
 
         for actor in self._actor_list:
+            # OpenADS: the Traffic Manager may have destroyed it, through this same handle
+            if not actor.is_alive:
+                continue
             # TODO: Actors spawned in the same frame as the behavior termination won't be removed.
             # Patched by removing its movement
             actor.disable_constant_velocity()
@@ -2036,6 +2051,9 @@ class OppositeActorFlow(AtomicBehavior):
         self._terminated = True
 
         for actor, _ in self._actor_list:
+            # OpenADS: skip an actor that is already destroyed, as ActorFlow does and as leaderboard 2.x did
+            if not actor.is_alive:
+                continue
             # TODO: Actors spawned in the same frame as the behavior termination won't be removed.
             # Patched by removing its movement
             actor.disable_constant_velocity()
@@ -2154,6 +2172,9 @@ class InvadingActorFlow(AtomicBehavior):
         self._terminated = True
 
         for actor, _ in self._actor_list:
+            # OpenADS: skip an actor that is already destroyed, as ActorFlow does and as leaderboard 2.x did
+            if not actor.is_alive:
+                continue
             # TODO: Actors spawned in the same frame as the behavior termination won't be removed.
             # Patched by removing its movement
             actor.disable_constant_velocity()
@@ -2293,6 +2314,9 @@ class BicycleFlow(AtomicBehavior):
         self._terminated = True
 
         for actor, _ in self._actor_data:
+            # OpenADS: skip an actor that is already destroyed, as ActorFlow does and as leaderboard 2.x did
+            if not actor.is_alive:
+                continue
             # TODO: Actors spawned in the same frame as the behavior termination won't be removed.
             # Patched by removing its movement
             actor.disable_constant_velocity()

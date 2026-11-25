@@ -112,14 +112,20 @@ class RouteLightsBehavior(py_trees.behaviour.Behaviour):
         scenario_vehicles = [v for v in all_vehicles if v.attributes['role_name'] == 'scenario']
 
         for vehicle in scenario_vehicles:
-            if vehicle.get_location().distance(location) > radius:
-                lights = vehicle.get_light_state()
-                lights &= ~self._vehicle_lights  # Remove those lights
-                vehicle.set_light_state(carla.VehicleLightState(lights))
-            else:
-                lights = vehicle.get_light_state()
-                lights |= self._vehicle_lights  # Add those lights
-                vehicle.set_light_state(carla.VehicleLightState(lights))
+            # OpenADS: the Traffic Manager destroys stuck vehicles after the snapshot this list comes
+            # from, so it can hold a destroyed vehicle. Its handle reports is_alive until the next
+            # tick, but the server already rejects the calls.
+            try:
+                if vehicle.get_location().distance(location) > radius:
+                    lights = vehicle.get_light_state()
+                    lights &= ~self._vehicle_lights  # Remove those lights
+                    vehicle.set_light_state(carla.VehicleLightState(lights))
+                else:
+                    lights = vehicle.get_light_state()
+                    lights |= self._vehicle_lights  # Add those lights
+                    vehicle.set_light_state(carla.VehicleLightState(lights))
+            except RuntimeError:
+                pass
 
         # Ego vehicle
         lights = self._ego_vehicle.get_light_state()
@@ -137,9 +143,15 @@ class RouteLightsBehavior(py_trees.behaviour.Behaviour):
         scenario_vehicles = [v for v in all_vehicles if v.attributes['role_name'] == 'scenario']
 
         for vehicle in scenario_vehicles:
-            lights = vehicle.get_light_state()
-            lights &= ~self._vehicle_lights  # Remove those lights
-            vehicle.set_light_state(carla.VehicleLightState(lights))
+            # OpenADS: the Traffic Manager destroys stuck vehicles after the snapshot this list comes
+            # from, so it can hold a destroyed vehicle. Its handle reports is_alive until the next
+            # tick, but the server already rejects the calls.
+            try:
+                lights = vehicle.get_light_state()
+                lights &= ~self._vehicle_lights  # Remove those lights
+                vehicle.set_light_state(carla.VehicleLightState(lights))
+            except RuntimeError:
+                pass
 
         # Ego vehicle
         lights = self._ego_vehicle.get_light_state()

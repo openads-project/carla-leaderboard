@@ -26,6 +26,7 @@ from leaderboard.autoagents.agent_wrapper import AgentWrapperFactory, AgentError
 from leaderboard.envs.sensor_interface import SensorReceivedNoData
 from leaderboard.utils.result_writer import ResultOutputProvider
 from leaderboard.utils.blackboard import set_blackboard
+from leaderboard.utils import protocol
 
 
 class ScenarioManager(object):
@@ -109,6 +110,7 @@ class ScenarioManager(object):
         """
 
         GameTime.restart()
+        self.tick_count = 0
         self._agent_wrapper = AgentWrapperFactory.get_wrapper(agent)
         self.route_index = route_index
         self.scenario = scenario
@@ -174,6 +176,11 @@ class ScenarioManager(object):
             # Update game time and actor information
             GameTime.on_carla_tick(timestamp)
             self._watchdog.pause()
+
+            self.tick_count += 1
+            tick_limit = protocol.get('tick_limit')
+            if tick_limit is not None and self.tick_count > tick_limit:
+                raise protocol.TickLimitReached("tick_count > {}".format(tick_limit))
 
             try:
                 self._agent_watchdog.resume()
