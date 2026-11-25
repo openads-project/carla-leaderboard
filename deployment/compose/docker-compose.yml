@@ -1,0 +1,22 @@
+services:
+
+  carla-leaderboard:
+    image: ghcr.io/openads-project/carla-leaderboard:v1.0.0-1.0.0
+    environment:
+      CARLA_HOST: carla-server
+      CARLA_PORT: 2000
+      ROUTES: /workspace/leaderboard/data/routes_devtest.xml
+      TEAM_AGENT: /workspace/leaderboard/leaderboard/autoagents/tm_agent.py
+      TEAM_CONFIG: ""
+      CHECKPOINT_ENDPOINT: /workspace/results/results.json
+    command:
+      - /bin/bash
+      - -ic
+      - |
+        exec python3 -u leaderboard/leaderboard_evaluator.py \
+          --host=$${CARLA_HOST} \
+          --port=$${CARLA_PORT} \
+          --routes=$${ROUTES} \
+          --agent=$${TEAM_AGENT} \
+          --agent-config=$${TEAM_CONFIG} \
+          --checkpoint=$${CHECKPOINT_ENDPOINT}
