@@ -7,3 +7,4 @@ Based on the CARLA Leaderboard for CARLA 1.0.0 (Unreal Engine 5.8), upstream bra
 - Added GitHub workflows that publish the image, the Compose file and the Helm chart. Releases are tagged `v<CARLA version>-<OpenADS version>`, starting with `v1.0.0-1.0.0` on CARLA 1.0.0.
 - Removed the unused `opencv-python` requirement.
 - Fixed the handling of actors that are already destroyed, such as stuck vehicles the Traffic Manager removes, which raised and could stop the route.
+- Added the evaluation protocols `default` (upstream rules) and `b2d` (Bench2Drive's rules), selected with `--protocol`.

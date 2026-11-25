@@ -13,6 +13,7 @@ from dictor import dictor
 import math
 
 from leaderboard.scenariomanager.traffic_events import TrafficEventType
+from leaderboard.utils import protocol
 
 from leaderboard.utils.checkpoint_tools import fetch_dict, save_dict
 
@@ -26,6 +27,21 @@ PENALTY_VALUE_DICT = {
     TrafficEventType.SCENARIO_TIMEOUT: 0.4,
     TrafficEventType.YIELD_TO_EMERGENCY_VEHICLE: 0.4,
     TrafficEventType.MIN_SPEED_INFRACTION: 0.4
+}
+
+# OpenADS: Bench2Drive's scoring, used by the b2d protocol. It is the scoring of leaderboard 2.0 (upstream
+# branch leaderboard-2.0, statistics_manager.py) without its minimum-speed penalty: every infraction
+# multiplies the route's penalty by its factor, instead of the 1 / (1 + sum of the values) above.
+# Outside route lanes is the same in both, (1 - percentage / 100).
+PENALTY_FACTOR_DICT_B2D = {
+    TrafficEventType.COLLISION_PEDESTRIAN: 0.5,
+    TrafficEventType.COLLISION_VEHICLE: 0.6,
+    TrafficEventType.COLLISION_STATIC: 0.65,
+    TrafficEventType.TRAFFIC_LIGHT_INFRACTION: 0.7,
+    TrafficEventType.STOP_INFRACTION: 0.8,
+    TrafficEventType.SCENARIO_TIMEOUT: 0.7,
+    TrafficEventType.YIELD_TO_EMERGENCY_VEHICLE: 0.7,
+    TrafficEventType.MIN_SPEED_INFRACTION: 1.0  # Recorded at every checkpoint, but not penalised
 }
 
 PENALTY_NAME_DICT = {
@@ -359,8 +375,13 @@ class StatisticsManager(object):
             for node in self._scenario.get_criteria():
                 for event in node.events:
 
+                    # OpenADS: Bench2Drive's scoring of the b2d protocol, see PENALTY_FACTOR_DICT_B2D
+                    if event.get_type() in PENALTY_FACTOR_DICT_B2D and protocol.get('scoring') == 'bench2drive':
+                        score_penalty *= PENALTY_FACTOR_DICT_B2D[event.get_type()]
+                        set_infraction_message()
+
                     # Traffic events that substract a set amount of points. Save the infraction
-                    if event.get_type() in PENALTY_VALUE_DICT:
+                    elif event.get_type() in PENALTY_VALUE_DICT:
                         if event.get_type() == TrafficEventType.MIN_SPEED_INFRACTION:
                             # Special infraction that isn't a constant penalty
                             value = PENALTY_VALUE_DICT[event.get_type()] * (1 - event.get_dict()['percentage'] / 100)

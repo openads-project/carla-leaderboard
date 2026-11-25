@@ -22,6 +22,7 @@ import shapely.geometry
 
 import carla
 
+from leaderboard.utils import protocol
 from leaderboard.scenariomanager.simulation_data import SimulationData
 from leaderboard.scenariomanager.timer import GameTime
 from leaderboard.scenariomanager.traffic_events import TrafficEvent, TrafficEventType
@@ -1154,6 +1155,9 @@ class MinimumSpeedRouteTest(Criterion):
         else:
             self.test_status = "FAILURE"
 
+        # OpenADS: the b2d protocol records every checkpoint, also those that are fast enough, as the
+        # input of Bench2Drive's efficiency metric. Its scoring does not penalise them (statistics_manager.py).
+        if self.test_status == "FAILURE" or protocol.get('min_speed_event_every_checkpoint'):
             self._traffic_event = TrafficEvent(TrafficEventType.MIN_SPEED_INFRACTION, GameTime.get_frame())
             self._traffic_event.set_dict({'percentage': checkpoint_value})
             self._traffic_event.set_message(f"Average speed is {checkpoint_value}% of the surrounding traffic's one")
