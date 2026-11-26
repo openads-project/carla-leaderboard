@@ -208,7 +208,7 @@ class LeaderboardEvaluator(object):
         # Has simulation failed?
         if self.world and self.manager and not self._client_timed_out:
             # Reset to asynchronous mode
-            self.world.tick()  # TODO: Make sure all scenario actors have been destroyed
+            SimulationData.tick(world=self.world)  # TODO: Make sure all scenario actors have been destroyed
             settings = self.world.get_settings()
             settings.synchronous_mode = False
             settings.fixed_delta_seconds = None
@@ -244,7 +244,7 @@ class LeaderboardEvaluator(object):
         self.traffic_manager.set_random_device_seed(args.traffic_manager_seed)
 
         # Wait for the world to be ready
-        self.world.tick()
+        SimulationData.tick(world=self.world)
 
         map_name = SimulationData.get_map().name.split("/")[-1]
         if map_name != town:

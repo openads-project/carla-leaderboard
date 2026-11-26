@@ -260,7 +260,7 @@ class AgentWrapper(object):
 
         # Some sensors miss sending data during the first ticks, so tick several times and remove the data
         for _ in range(10):
-            world.tick()
+            SimulationData.tick()
 
     def cleanup(self):
         """
@@ -274,7 +274,7 @@ class AgentWrapper(object):
         self._sensors_list = []
 
         # Tick once to destroy the sensors
-        SimulationData.get_world().tick()
+        SimulationData.tick()
 
 
 class ROSAgentWrapper(AgentWrapper):
@@ -304,7 +304,7 @@ class ROSAgentWrapper(AgentWrapper):
             self._sensors_list.append(uid)
 
         # Tick once to spawn the sensors
-        SimulationData.get_world().tick()
+        SimulationData.tick()
 
     def cleanup(self):
         for uid in self._sensors_list:
@@ -312,4 +312,4 @@ class ROSAgentWrapper(AgentWrapper):
         self._sensors_list.clear()
 
         # Tick once to destroy the sensors
-        SimulationData.get_world().tick()
+        SimulationData.tick()
