@@ -165,7 +165,7 @@ class ScenarioManager(object):
         Run next tick of scenario and the agent and tick the world.
         """
         if self._running and self.get_running_status():
-            SimulationData.get_world().tick(self._timeout)
+            SimulationData.tick(self._timeout)
 
         timestamp = SimulationData.get_world().get_snapshot().timestamp
 

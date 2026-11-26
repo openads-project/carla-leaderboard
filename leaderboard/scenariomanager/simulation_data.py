@@ -29,6 +29,7 @@ class SimulationData(object):
     _world = None               # type: carla.World
     _map = None                 # type: carla.Map
     _do_tick = False            # type: bool
+    _tick_function = None       # OpenADS: see set_tick_function
     _ego_vehicle_route = None
     _traffic_manager_port = 8000
     _random_seed = 2000
@@ -123,12 +124,35 @@ class SimulationData(object):
         SimulationData._do_tick = flag
 
     @staticmethod
+    def set_tick_function(function):
+        """
+        OpenADS: sets the function that advances the world, for example to step another simulation
+        in lockstep or to pace and gate the run. It is called as function(world, timeout), with
+        timeout None for the client's default, must tick the world exactly once and returns the
+        new frame. None restores world.tick(). Its time counts towards the evaluator's --timeout.
+        """
+        SimulationData._tick_function = function
+
+    @staticmethod
+    def tick(timeout=None, world=None):
+        """
+        OpenADS: advances the world by one step, through the tick function if one is set. Every
+        place where the evaluator owns the tick calls this instead of world.tick(). The world
+        defaults to the one of SimulationData; the evaluator passes its own, as it also ticks
+        after cleanup() has dropped it here.
+        """
+        world = world if world is not None else SimulationData._world
+        if SimulationData._tick_function is not None:
+            return SimulationData._tick_function(world, timeout)
+        return world.tick() if timeout is None else world.tick(timeout)
+
+    @staticmethod
     def tick_world():
         """
         Advance the world, or wait for whoever is advancing it
         """
         if SimulationData._do_tick:
-            SimulationData._world.tick()
+            SimulationData.tick()
         else:
             SimulationData._world.wait_for_tick()
 

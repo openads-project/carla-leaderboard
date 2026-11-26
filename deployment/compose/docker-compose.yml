@@ -9,14 +9,17 @@ services:
       TEAM_AGENT: /workspace/leaderboard/leaderboard/autoagents/tm_agent.py
       TEAM_CONFIG: ""
       CHECKPOINT_ENDPOINT: /workspace/results/results.json
+      PROTOCOL: default
     command:
       - /bin/bash
       - -ic
       - |
+        cd /workspace/leaderboard
         exec python3 -u leaderboard/leaderboard_evaluator.py \
           --host=$${CARLA_HOST} \
           --port=$${CARLA_PORT} \
           --routes=$${ROUTES} \
           --agent=$${TEAM_AGENT} \
           --agent-config=$${TEAM_CONFIG} \
-          --checkpoint=$${CHECKPOINT_ENDPOINT}
+          --checkpoint=$${CHECKPOINT_ENDPOINT} \
+          --protocol=$${PROTOCOL}

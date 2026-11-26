@@ -161,7 +161,7 @@ class RouteScenario(BasicScenario):
         spectator.set_transform(carla.Transform(elevate_transform.location + carla.Location(z=50),
                                                     carla.Rotation(pitch=-90)))
 
-        self.world.tick()
+        SimulationData.tick()
 
         return ego_vehicle
 
