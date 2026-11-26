@@ -5,3 +5,5 @@
 .pydevproject
 *.sh
 *.xml
+# docker-ros install script
+!docker-ros/custom.sh
