@@ -7,7 +7,7 @@
   <br>
   <img src="https://img.shields.io/badge/CARLA-1.0.0-blueviolet"/>
   <img src="https://img.shields.io/badge/Python-3.12-blueviolet"/>
-  <a href="https://github.com/openads-project/carla-leaderboard/actions/workflows/docker.yml"><img src="https://github.com/openads-project/carla-leaderboard/actions/workflows/docker.yml/badge.svg"/></a>
+  <a href="https://github.com/openads-project/carla-leaderboard/actions/workflows/docker-ros.yml"><img src="https://github.com/openads-project/carla-leaderboard/actions/workflows/docker-ros.yml/badge.svg"/></a>
 </p>
 
 **Closed-loop evaluation of driving agents on routes and scenarios in CARLA, based on the CARLA Leaderboard**
