@@ -15,7 +15,9 @@ actors or environmental parameters. Hence, a termination is not required.
 The atomic criteria are implemented with py_trees.
 """
 
+import json
 import math
+import os
 import numpy as np
 import py_trees
 import shapely.geometry
@@ -878,6 +880,54 @@ class RunningRedLightTest(Criterion):
         return area_loc, wps
 
 
+class StopSignFromFile:
+    """
+    OpenADS: a stop sign read from a file, with what RunningStopTest reads from a 'traffic.stop' actor.
+    Every call returns new objects, as an actor does: carla.Transform.transform() changes the location
+    it is given in place.
+    """
+
+    type_id = 'traffic.stop'
+
+    def __init__(self, data):
+        self.id = data['id']
+        self._transform = data['transform']
+        self._trigger = data['trigger']
+
+    def get_transform(self):
+        t = self._transform
+        return carla.Transform(carla.Location(t['x'], t['y'], t['z']),
+                               carla.Rotation(pitch=t['pitch'], yaw=t['yaw'], roll=t['roll']))
+
+    @property
+    def trigger_volume(self):
+        loc, ext, rot = self._trigger['location'], self._trigger['extent'], self._trigger['rotation']
+        volume = carla.BoundingBox(carla.Location(loc['x'], loc['y'], loc['z']), carla.Vector3D(ext['x'], ext['y'], ext['z']))
+        volume.rotation = carla.Rotation(pitch=rot['pitch'], yaw=rot['yaw'], roll=rot['roll'])
+        return volume
+
+
+def load_stop_signs(map_name):
+    """
+    OpenADS: the stop signs of a town from <OPENADS_STOP_SIGNS_DIR>/<town>.json, for maps without
+    'traffic.stop' actors. Format: {"stops": [{"id", "transform": {x, y, z, pitch, yaw, roll},
+    "trigger": {"location": {x, y, z} (relative to the sign), "extent": {x, y, z}, "rotation": {...}}}]}.
+    Returns an empty list if the variable is not set or the town has no file.
+    """
+    directory = os.environ.get('OPENADS_STOP_SIGNS_DIR')
+    if not directory:
+        return []
+    town = map_name.split('/')[-1]
+    for name in (town, town[:-len('_Opt')] if town.endswith('_Opt') else None):
+        path = os.path.join(directory, '{}.json'.format(name)) if name else None
+        if path and os.path.isfile(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                stops = [StopSignFromFile(s) for s in json.load(f)['stops']]
+            print("RunningStopTest: {} has no stop sign actors, using the {} stop signs of {}".format(town, len(stops), path))
+            return stops
+    return []
+
+
 class RunningStopTest(Criterion):
     """
     Check if an actor is running a stop sign
@@ -905,6 +955,11 @@ class RunningStopTest(Criterion):
         for _actor in self._world.get_actors():  # pylint: disable=not-an-iterable
             if 'traffic.stop' in _actor.type_id:
                 self._list_stop_signs.append(_actor)
+
+        # OpenADS: CARLA 1.0's Town12 and Town13 have the stop sign meshes and OpenDRIVE signals, but no
+        # 'traffic.stop' actors, so no stop would be checked there. Use the stop signs of a file instead.
+        if not self._list_stop_signs:
+            self._list_stop_signs = load_stop_signs(self._map.name)
 
     def point_inside_boundingbox(self, point, bb_center, bb_extent, multiplier=1.2):
         """Checks whether or not a point is inside a bounding box."""

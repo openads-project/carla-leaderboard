@@ -9,3 +9,4 @@ Based on the CARLA Leaderboard for CARLA 1.0.0 (Unreal Engine 5.8), upstream bra
 - Fixed the handling of actors that are already destroyed, such as stuck vehicles the Traffic Manager removes, which raised and could stop the route.
 - Added the evaluation protocols `default` (upstream rules) and `b2d` (Bench2Drive's rules), selected with `--protocol`.
 - Added a tick function (`SimulationData.set_tick_function`) through which every tick of the evaluator goes, for example to step another simulation in lockstep or to pace and gate the run. A script that sets it and then calls `leaderboard_evaluator.main()` can run the evaluator with it.
+- Added stop signs from a file for maps without `traffic.stop` actors (CARLA 1.0's Town12 and Town13 have the sign meshes and OpenDRIVE signals, but no stop sign actors, so `RunningStopTest` checked no stop there): `RunningStopTest` reads `$OPENADS_STOP_SIGNS_DIR/<town>.json` if the map has none.
